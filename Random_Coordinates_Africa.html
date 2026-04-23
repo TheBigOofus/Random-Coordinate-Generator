@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" type="image/x-icon" href="favicon-32x32.png">
+    <title>Random Africa Coordinates Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0fff0; 
+            text-align: center;
+        }
+        .nav-link {
+            /* Link back to index.html if using the two-page setup */
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            text-decoration: none;
+            color: #2e8b57;
+            font-weight: bold;
+        }
+        .button-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            transition: background-color 0.3s ease, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        button:hover {
+            transform: translateY(-1px);
+        }
+        #coordinateButton {
+            background-color: #28a745; 
+            color: white;
+        }
+        #coordinateButton:hover {
+            background-color: #1e7e34;
+        }
+        #copyButton {
+            background-color: #007bff;
+            color: white;
+            display: none;
+        }
+        #copyButton:hover {
+            background-color: #0056b3;
+        }
+        #output {
+            margin-top: 30px;
+            font-size: 1.8em;
+            color: #333;
+            font-weight: bold;
+            padding: 15px 30px;
+            background-color: white;
+            border-radius: 8px;
+            min-height: 1.5em;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .Slider {
+            position: fixed;
+            right: 100px;
+            top: 270px;
+        }
+    </style>
+</head>
+<body>
+    <div class="Slider">
+    <input type="range" id="ZRange" min="1" max="18" value="3"> 
+    <p>
+        Map Zoom Factor: <span id="currentValueDisplay">3</span>
+    </p>
+</div>
+
+    <a href="index.html" class="nav-link">← Go Back to Main Page</a>
+
+    <h1>🌍 Random Africa Coordinate Generator</h1>
+    <p>Coordinates are restricted to Africa (Some coordinates will be in the oceans and/or countries surrounding Africa).</p>
+
+    <div class="button-container">
+        <button id="coordinateButton">Generate Coordinates</button>
+        <button id="copyButton">📋 Copy Coordinates</button>
+    </div>
+
+    <div id="output">Click the button to generate coordinates!</div>
+
+    <figure id="map-figure">
+        <iframe 
+            id="google-map-iframe"
+            width="1000" 
+            height="400" 
+            frameborder="0" 
+            style="border:0; margin-top: 20px;"
+            allowfullscreen="" 
+            loading="lazy" 
+            referrerpolicy="no-referrer-when-downgrade"
+            src=""
+            title="Interactive Google Map"
+        >
+        </iframe>
+    </figure>
+
+    <script>
+        let currentCoordinates = "";
+        let currentLat = "";
+        let currentLon = "";
+        let userZRange = 3; 
+        // --- SLIDER LOGIC START ---
+        
+        // 1. Get references to the HTML elements
+        const slider = document.getElementById('ZRange');
+        const display = document.getElementById('currentValueDisplay');
+
+        // 2. Attach the event listener directly (no need for a wrapping function)
+        slider.addEventListener('input', function() {
+            // A. Read the current value of the slider
+            const newValue = this.value;
+
+            // B. Update the GLOBAL 'let' variable (currentPrecision)
+            userZRange= Number(newValue); 
+
+            // C. Update the display element
+            display.textContent = userZRange;
+        });
+
+        function generateRandomCoordinate(min, max) {
+            const random = Math.random() * (max - min) + min;
+            return random.toFixed(4); 
+        }
+
+        function generateCoordinates() {
+            currentLat = generateRandomCoordinate(-34.8, 37.3);
+            currentLon = generateRandomCoordinate(-17.5, 51.4);
+
+            const outputElement = document.getElementById('output');
+            const copyButton = document.getElementById('copyButton');
+            const mapIframe = document.getElementById('google-map-iframe');
+            
+            // 1. Store coordinates for copying
+            currentCoordinates = `${currentLat}, ${currentLon}`;
+            
+            // Determine direction for display
+            const latDir = currentLat >= 0 ? 'N' : 'S';
+            const lonDir = currentLon >= 0 ? 'E' : 'W';
+
+            // 2. CONSTRUCT THE GOOGLE MAPS EMBED URL
+            const mapEmbedURL = `https://maps.google.com/maps?q=${currentLat},${currentLon}&hl=en&z=${userZRange}&t=k&output=embed`;
+            
+            
+            // 3. Update the iframe source to load the new map
+            mapIframe.src = mapEmbedURL;
+
+            // 4. Update the display with coordinates
+            outputElement.innerHTML = `${Math.abs(currentLat)}° ${latDir}, ${Math.abs(currentLon)}° ${lonDir}`;
+            
+            copyButton.style.display = 'inline-block';
+        }
+
+        function copyCoordinates() {
+            // (Copy function remains the same)
+            if (currentCoordinates) {
+                navigator.clipboard.writeText(currentCoordinates).then(() => {
+                    const copyButton = document.getElementById('copyButton');
+                    const originalText = copyButton.innerHTML;
+                    copyButton.innerHTML = '✅ Copied!';
+                    
+                    setTimeout(() => {
+                        copyButton.innerHTML = originalText;
+                    }, 1500);
+
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                    alert("Could not copy coordinates. Please copy manually.");
+                });
+            }
+        }
+
+        // Attach event listeners
+        document.getElementById('coordinateButton').addEventListener('click', generateCoordinates);
+        document.getElementById('copyButton').addEventListener('click', copyCoordinates);
+    </script>
+
+</body>
+</html>
